@@ -19,7 +19,7 @@ jobs:
             git
 
       - name: Clone repository
-        run: git clone --depth 1 https://github.com/NVIDIA/open-gpu-kernel-modules.git
+        run: git clone --depth 1 https://github.com/YaroslavZ-ru/open-gpu-kernel-modules.git
 
       - name: Build modules
         run: |
