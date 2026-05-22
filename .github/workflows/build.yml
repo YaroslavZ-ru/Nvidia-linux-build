@@ -1,4 +1,4 @@
-name: Build NVIDIA Open GPU Kernel Modules
+name: Build NVIDIA Open GPU Kernel Modules (Clang Optimized)
 
 on: workflow_dispatch
 
@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       KERNEL: '6.8.0-45-generic'
+      # Оптимизации Clang (можно менять)
+      KCFLAGS: '-O3 -march=native -mtune=native -flto=thin -funroll-loops -fomit-frame-pointer -mllvm -unroll-count=4 -mllvm -vectorize-loops -mllvm -slp-vectorize'
+      LDFLAGS: '-flto=thin -fuse-ld=lld'
     steps:
       - name: Install dependencies
         run: |
@@ -16,19 +19,25 @@ jobs:
             libelf-dev \
             pkg-config \
             linux-headers-${{ env.KERNEL }} \
-            git
+            git \
+            clang \
+            llvm \
+            lld
 
       - name: Clone repository
         run: git clone --depth 1 https://github.com/NVIDIA/open-gpu-kernel-modules.git
 
-      - name: Build modules
+      - name: Build modules with Clang optimizations
         run: |
           cd open-gpu-kernel-modules
-          make modules -j$(nproc)
+          export CC=clang
+          export LLVM=1
+          # Передаём флаги в систему сборки ядра
+          make modules -j$(nproc) KCFLAGS="$KCFLAGS" LDFLAGS="$LDFLAGS"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nvidia-open-modules-x64
+          name: nvidia-open-modules-x64-clang-opt
           path: open-gpu-kernel-modules/kernel-open/**/*.ko
           retention-days: 7
