@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env:
-      KERNEL: '6.8.0-45-generic'
+      KERNEL: '7.0.9-1-cachyos-bore'
     steps:
       - name: Install dependencies
         run: |
