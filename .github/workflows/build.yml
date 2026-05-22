@@ -1,33 +1,34 @@
 name: Build NVIDIA Open GPU Kernel Modules
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-env:
-  KERNEL: '6.8.0-45-generic'
+on: workflow_dispatch
 
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      KERNEL: '6.8.0-45-generic'
     steps:
-      - uses: actions/checkout@v4
-
-      - run: |
+      - name: Install dependencies
+        run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
             libelf-dev \
             pkg-config \
-            linux-headers-${{ env.KERNEL }}
+            linux-headers-${{ env.KERNEL }} \
+            git
 
-      - run: make modules -j$(nproc)
+      - name: Clone repository
+        run: git clone --depth 1 https://github.com/NVIDIA/open-gpu-kernel-modules.git
 
-      - uses: actions/upload-artifact@v4
+      - name: Build modules
+        run: |
+          cd open-gpu-kernel-modules
+          make modules -j$(nproc)
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: nvidia-open-modules-x64
-          path: kernel-open/**/*.ko
+          path: open-gpu-kernel-modules/kernel-open/**/*.ko
           retention-days: 7
